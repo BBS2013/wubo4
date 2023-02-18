@@ -1,0 +1,101 @@
+上来一道算法题：链表成环问题
+question1. C++内存管理，new delete区别
+使用方法上的区别
+1. new能够按照变量类型自动地分配所需空间长度，不必使用宏sizeof。
+2. new能够自动返回正确的指针类型。
+3. 必须时，new能将单个变量初始化。
+用例阐述
+malloc
+用 malloc 申请一块长度为length 的整数类型的内存，程序如下：
+int *p = (int *) malloc ( sizeof(int) * length); 
+我们应当把注意力集中在两个要素上：“类型转换”和“sizeof”。
+void * malloc(size_t size); 
+1、malloc 返回值的类型是 void *，所以在调用 malloc 时要显式地进行类型转换，将 void * 转换成所需要的指针类型。
+2、malloc 函数本身并不识别要申请的内存是什么类型，它只关心内存的总字节数。
+
+free
+void free( void * memblock ); 
+为什么free 函数不象malloc 函数那样复杂呢？这是因为指针p 的类型以及它所指的内存的容量事先都是知道的，语句free(p)能正确地释放内存。如果p 是NULL 指针，那么free对p 无论操作多少次都不会出问题。如果p 不是NULL 指针，那么free 对p连续操作两次就会导致程序运行错误。（悬浮指针和空指针的区别就在这里）
+
+new/delete 
+运算符 new 使用起来要比函数 malloc 简单得多，例如：
+int *p1 = (int *)malloc(sizeof(int) * length);  
+int *p2 = new int[length]; 
+这是因为 new 内置了sizeof、类型转换和类型安全检查功能。对于非内部数据类型的对象而言，new 在创建动态对象的同时完成了初始化工作。如果对象有多个构造函数，那么new 的语句也可以有多种形式。
+如果用new 创建对象数组，那么只能使用对象的无参数构造函数。例如
+Obj *objects = new Obj[100]; // 创建100 个动态对象 
+不能写成
+Obj *objects = new Obj[100](1);// 创建100 个动态对象的同时赋初值1 
+在用delete 释放对象数组时，留意不要丢了符号‘[ ]’。例如
+delete []objects; // 正确的用法 
+delete objects; // 错误的用法 
+后者相当于delete objects[0]，漏掉了另外99 个对象。
+
+malloc/free 与 new/delete共同点
+1 都必须配对使用，这里的配对使用，可不能理解为一个 new/malloc 就对应一个 delete/free ，而是指在作用域内，new/malloc 所申请的内存，必须被有效释放，否则将会导致内存泄露，至于内存泄露的检查方法，我们推荐的工具是大家众所周知的 Bounds Checker；
+
+2 都是申请内存，释放内存，free和delete可以释放NULL指针。
+既然new/delete的功能完全覆盖了malloc /free，为什么C++还保留malloc/free呢？
+对于非内部数据类型对象（如类对象）而言，只用malloc/free 无法满足动态对象的要求。对象在创建的同时要自动执行构造函数，对象在消亡之前要自动执行析构函数。
+
+由于，malloc/free是库函数而不是运算符，不在编译器控制权限之内，也就不能执行构造函数和析构函数，不能够把执行构造函数和析构函数的任务强加于malloc/free。
+
+所以，若要强求使用malloc/free库函数实现非内部数据类型对象的内存管理，在malloc（）后要有一个类对象的初始化来承担构造函数的功能，同时，在free之前也要有一个消除函数来充当析构函数的功能，当然这是很不方便，也是不提倡的。
+
+因此，C++语言需要一个能完成动态内存分配和初始化工作的运算符new，以及一个能完成清理与释放内存工作的运算符delete。new/delete不是库函数，而是运算符。
+
+而对于内部数据类型，由于内部数据类型的对象没有构造函数与析构函数的过程，对他们来说，malloc/free与new/delete是等价的。
+
+或许你会问，既然new/delete的功能完全可以实现malloc/free的功能，为什么C++中不把malloc/free淘汰掉呢，这可能涉及到一个兼容性问题，C++程序要经常调用C函数，而C语言中只能用malloc/free来管理内存。
+
+question2. delete能否释放malloc的内存, delete怎么知道该释放多大的内存
+https://blog.csdn.net/TABE_/article/details/122179176
+可以，但是一般不这么用。malloc/free是c语言中的函数，c++为了兼容c保留下来这一对函数。简单来说，new 可以理解为，先执行malloc来申请内存，后调用构造函数来初始化对象；delete是先执行析构函数，后使用free来释放内存。
+
+question3. 智能指针原理，智能指针用的多吗（不多....）
+https://blog.csdn.net/zhizhengguan/article/details/112302192#:~:text=%E5%BE%85%E6%95%B4%E7%90%86
+
+https://blog.csdn.net/worldwindjp/article/details/18843087
+question4. 智能指针线程安全吗
+https://zhuanlan.zhihu.com/p/71649913#:~:text=%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88%E7%9A%84%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%20%E9%80%9A%E5%B8%B8%E8%80%8C%E8%A8%80%EF%BC%8C%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88%E6%98%AF%E9%9D%9E%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E7%9A%84%E3%80%82%20%E5%9C%A8%E7%BC%96%E5%86%99%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%A8%8B%E5%BA%8F%E4%B8%AD%EF%BC%8C%E4%B8%BA%E4%BA%86%E9%81%BF%E5%85%8D%E7%AB%9E%E6%80%81%E6%9D%A1%E4%BB%B6%E5%AF%BC%E8%87%B4%E7%9A%84%E6%9C%AA%E5%AE%9A%E4%B9%89%E8%A1%8C%E4%B8%BA%EF%BC%8C%E9%9C%80%E8%A6%81%E4%BD%BF%E7%94%A8%E4%B8%80%E4%BA%9B%E6%8A%80%E6%9C%AF%EF%BC%8C%E6%AF%94%E5%A6%82%E4%BA%92%E6%96%A5%E5%8C%BA%E6%88%96%E8%80%85%E6%98%AF%E9%94%81%E3%80%82%20%E5%B9%B8%E8%BF%90%E7%9A%84%E6%98%AF%EF%BC%8C%E8%AF%BB%E5%8F%96%E5%8F%A6%E4%B8%80%E4%B8%AA%E7%BA%BF%E7%A8%8B%E4%BF%AE%E6%94%B9%E7%9A%84%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0%E5%B9%B6%E4%B8%8D%E4%BC%9A%E6%9E%84%E6%88%90%E7%AB%9E%E6%80%81%E6%9D%A1%E4%BB%B6%EF%BC%8C%E4%BD%86%E6%98%AF%E6%95%B0%E5%80%BC%E5%8F%AF%E8%83%BD%E4%B8%8D%E6%98%AF%E6%9C%80%E6%96%B0%E5%80%BC%E3%80%82,%E4%BA%8B%E5%AE%9E%E4%B8%8A%EF%BC%8C%E4%B8%80%E4%B8%AA%E7%BA%BF%E7%A8%8B%E6%A3%80%E6%9F%A5%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0%E7%9A%84%E6%97%B6%E5%80%99%EF%BC%8C%E5%8F%A6%E4%B8%80%E4%B8%AA%E7%BA%BF%E7%A8%8B%E5%8F%AF%E4%BB%A5%E4%BF%AE%E6%94%B9%E5%AE%83%E3%80%82%20%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88%E4%B9%9F%E6%8F%90%E4%BE%9B%E4%BA%86%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C%E7%9A%84%E6%8E%A5%E5%8F%A3%EF%BC%8C%E4%BB%8E%E8%80%8C%E8%83%BD%E5%A4%84%E7%90%86%E5%B9%B6%E5%8F%91%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88%E7%9A%84%E5%B9%B6%E5%8F%91%E9%97%AE%E9%A2%98%E3%80%82%20%E6%B3%A8%E6%84%8F%E8%BF%99%E4%BA%9B%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C%E6%98%AF%E4%B8%BA%E6%8C%87%E9%92%88%E5%87%86%E5%A4%87%E7%9A%84%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF%E4%B8%BA%E5%AF%B9%E8%B1%A1%E5%87%86%E5%A4%87%E7%9A%84%E3%80%82%20%E4%BE%8B%E5%A6%82%EF%BC%9A
+
+question5. 什么是踩内存（新名词，没听过）
+访问了不合法的地址 。
+https://blog.csdn.net/LJFjy_fighting/article/details/119845208
+出现踩内存的情形
+内存访问越界
+a) 数组访问越界；
+b) 字符串操作越界；
+
+非法指针
+a) 使用了空指针；
+b) 使用了释放掉的指针；
+c) 指针类型转换错误；
+
+栈溢出；
+多线程读写的数据没有加锁保护；
+多线程使用了线程不安全的函数。
+
+
+question6. 怎么发现内存泄漏，泄漏了怎么定位，怎么避免
+https://zhuanlan.zhihu.com/p/458541056#:~:text=%E5%A6%82%E4%BD%95%E9%81%BF%E5%85%8D%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2%EF%BC%9F%201%20%E7%A1%AE%E4%BF%9D%E6%B2%A1%E6%9C%89%E5%9C%A8%E8%AE%BF%E9%97%AE%E7%A9%BA%E6%8C%87%E9%92%88%E3%80%82%202%20%E6%AF%8F%E4%B8%AA%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E5%87%BD%E6%95%B0%E9%83%BD%E5%BA%94%E8%AF%A5%E6%9C%89%E4%B8%80%E4%B8%AA%20free%20%E5%87%BD%E6%95%B0%E4%B8%8E%E4%B9%8B%E5%AF%B9%E5%BA%94%EF%BC%8Calloca%20%E5%87%BD%E6%95%B0%E9%99%A4%E5%A4%96%E3%80%82,4%20%E6%AF%8F%E5%BD%93%E5%90%91%E6%8C%87%E9%92%88%E5%86%99%E5%85%A5%E5%80%BC%E6%97%B6%EF%BC%8C%E9%83%BD%E8%A6%81%E7%A1%AE%E4%BF%9D%E5%AF%B9%E5%8F%AF%E7%94%A8%E5%AD%97%E8%8A%82%E6%95%B0%E5%92%8C%E6%89%80%E5%86%99%E5%85%A5%E7%9A%84%E5%AD%97%E8%8A%82%E6%95%B0%E8%BF%9B%E8%A1%8C%E4%BA%A4%E5%8F%89%E6%A0%B8%E5%AF%B9%E3%80%82%205%20%E5%9C%A8%E5%AF%B9%E6%8C%87%E9%92%88%E8%B5%8B%E5%80%BC%E5%89%8D%EF%BC%8C%E4%B8%80%E5%AE%9A%E8%A6%81%E7%A1%AE%E4%BF%9D%E6%B2%A1%E6%9C%89%E5%86%85%E5%AD%98%E4%BD%8D%E7%BD%AE%E4%BC%9A%E5%8F%98%E4%B8%BA%E5%AD%A4%E7%AB%8B%E7%9A%84%E3%80%82%206%20%E6%AF%8F%E5%BD%93%E9%87%8A%E6%94%BE%E7%BB%93%E6%9E%84%E5%8C%96%E7%9A%84%E5%85%83%E7%B4%A0%EF%BC%88%E8%80%8C%E8%AF%A5%E5%85%83%E7%B4%A0%E5%8F%88%E5%8C%85%E5%90%AB%E6%8C%87%E5%90%91%E5%8A%A8%E6%80%81%E5%88%86%E9%85%8D%E7%9A%84%E5%86%85%E5%AD%98%E4%BD%8D%E7%BD%AE%E7%9A%84%E6%8C%87%E9%92%88%EF%BC%89%E6%97%B6%EF%BC%8C%E9%83%BD%E5%BA%94%E5%85%88%E9%81%8D%E5%8E%86%E5%AD%90%E5%86%85%E5%AD%98%E4%BD%8D%E7%BD%AE%E5%B9%B6%E4%BB%8E%E9%82%A3%E9%87%8C%E5%BC%80%E5%A7%8B%E9%87%8A%E6%94%BE%EF%BC%8C%E7%84%B6%E5%90%8E%E5%86%8D%E9%81%8D%E5%8E%86%E5%9B%9E%E7%88%B6%E8%8A%82%E7%82%B9%E3%80%82%207%20%E5%A7%8B%E7%BB%88%E6%AD%A3%E7%A1%AE%E5%A4%84%E7%90%86%E8%BF%94%E5%9B%9E%E5%8A%A8%E6%80%81%E5%88%86%E9%85%8D%E7%9A%84%E5%86%85%E5%AD%98%E5%BC%95%E7%94%A8%E7%9A%84%E5%87%BD%E6%95%B0%E8%BF%94%E5%9B%9E%E5%80%BC%E3%80%82
+
+6. 进程通讯的方式，介绍下共享内存
+https://blog.csdn.net/ypt523/article/details/79958188
+https://blog.csdn.net/zhaohong_bo/article/details/89552188
+
+
+7. 项目中用到了管道，讲讲管道，为什么用管道
+https://blog.csdn.net/JMW1407/article/details/107700451
+
+8. 内核态和用户态介绍下
+https://blog.csdn.net/ENSHADOWER/article/details/97653280
+
+9. 怎么进入内核态
+https://blog.csdn.net/Shangxingya/article/details/113664779
+https://blog.csdn.net/weixin_45490038/article/details/101520706
+
+10. 了解mysql的锁吗，讲下乐观锁和悲观锁及使用场景
+
+11. 什么情况下锁整张表
+12. explain在mysql里面是干啥的
