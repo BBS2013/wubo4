@@ -2,6 +2,7 @@
 
 #### 3.代码实现
 
+```c++
 class Solution:
 
   def numSquares(self, n):
@@ -26,9 +27,10 @@ class Solution:
 
 ​      else:
 
-​        break
+       break
 
-​    return 3
+    return 3
+```
 
 \#主函数
 
@@ -5237,7 +5239,7 @@ if __name__ == "__main__":
   node2.next = node3
   node3.next = node4
   list1 = []
- 
+
   solution = Solution()
   print("输入的初始链表是：", [node1.val, node2.val, node3.val, node4.val])
   newlist = solution.reverse(node1)
@@ -5301,7 +5303,7 @@ if __name__ == "__main__":
   list1 = []
   m = 2
   n = 4
- 
+
   solution = Solution()
   print("初始链表是：", [node1.val, node2.val, node3.val, node4.val, node5.val], "初始的m=", m , "n=", n)
   newlist = solution.reverseBetween(node1, m, n)
